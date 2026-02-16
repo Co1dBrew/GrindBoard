@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GrindBoard - Question History</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container">
+      <a class="navbar-brand" href="/">GrindBoard</a>
+      <div class="navbar-nav">
+        <a class="nav-link" href="/questions">Question Bank</a>
+        <a class="nav-link active" href="/sessions">Practice Sessions</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container mt-4">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/questions">Questions</a></li>
+        <li class="breadcrumb-item active"><%= question.title %></li>
+      </ol>
+    </nav>
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h1>Practice History: <%= question.title %></h1>
+      <div>
+        <a href="<%= question.link %>" target="_blank" class="btn btn-outline-primary">View Question</a>
+        <a href="/sessions/new/<%= question._id %>" class="btn btn-success">Log New Attempt</a>
+      </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+      <div class="col-md-3">
+        <div class="card text-center">
+          <div class="card-body">
+            <h5 class="card-title"><%= stats.totalAttempts %></h5>
+            <p class="card-text text-muted">Total Attempts</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card text-center border-success">
+          <div class="card-body">
+            <h5 class="card-title text-success"><%= stats.solved %></h5>
+            <p class="card-text text-muted">Solved</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card text-center border-danger">
+          <div class="card-body">
+            <h5 class="card-title text-danger"><%= stats.unsolved %></h5>
+            <p class="card-text text-muted">Unsolved</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card text-center">
+          <div class="card-body">
+            <h5 class="card-title"><%= stats.avgTime %> min</h5>
+            <p class="card-text text-muted">Avg Time</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sessions List -->
+    <h3>Attempt History</h3>
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Result</th>
+          <th>Time Spent</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% sessions.forEach(s => { %>
+        <tr>
+          <td><%= new Date(s.date).toLocaleDateString() %></td>
+          <td>
+            <span class="badge bg-<%= s.result === 'Solved' ? 'success' : 'danger' %>">
+              <%= s.result %>
+            </span>
+          </td>
+          <td><%= s.timeSpent %> min</td>
+          <td><%= s.notes || '-' %></td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+
+    <% if (sessions.length === 0) { %>
+    <div class="text-center text-muted py-5">
+      <p>No attempts yet for this question. <a href="/sessions/new/<%= question._id %>">Log your first attempt!</a></p>
+    </div>
+    <% } %>
+
+    <a href="/questions" class="btn btn-secondary">Back to Questions</a>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

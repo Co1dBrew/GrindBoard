@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GrindBoard - Practice Sessions</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container">
+      <a class="navbar-brand" href="/">GrindBoard</a>
+      <div class="navbar-nav">
+        <a class="nav-link" href="/questions">Question Bank</a>
+        <a class="nav-link active" href="/sessions">Practice Sessions</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h1>Practice Sessions</h1>
+      <a href="/sessions/new" class="btn btn-success">+ Log Practice</a>
+    </div>
+
+    <!-- Sessions Table -->
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>Question</th>
+          <th>Difficulty</th>
+          <th>Result</th>
+          <th>Time Spent</th>
+          <th>Date</th>
+          <th>Notes</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% sessions.forEach(s => { %>
+        <tr>
+          <td>
+            <% if (s.questionId) { %>
+              <a href="<%= s.questionId.link %>" target="_blank"><%= s.questionId.title %></a>
+            <% } else { %>
+              <span class="text-muted">Deleted Question</span>
+            <% } %>
+          </td>
+          <td>
+            <% if (s.questionId) { %>
+              <span class="badge bg-<%= s.questionId.difficulty === 'Easy' ? 'success' : s.questionId.difficulty === 'Med' ? 'warning' : 'danger' %>">
+                <%= s.questionId.difficulty %>
+              </span>
+            <% } else { %>-<% } %>
+          </td>
+          <td>
+            <span class="badge bg-<%= s.result === 'Solved' ? 'success' : 'danger' %>">
+              <%= s.result %>
+            </span>
+          </td>
+          <td><%= s.timeSpent %> min</td>
+          <td><%= new Date(s.date).toLocaleDateString() %></td>
+          <td><%= s.notes || '-' %></td>
+          <td>
+            <form action="/sessions/<%= s._id %>?_method=DELETE" method="POST" class="d-inline">
+              <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this session?')">Delete</button>
+            </form>
+          </td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+
+    <% if (sessions.length === 0) { %>
+    <div class="text-center text-muted py-5">
+      <p>No practice sessions yet. <a href="/sessions/new">Log your first practice!</a></p>
+    </div>
+    <% } %>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

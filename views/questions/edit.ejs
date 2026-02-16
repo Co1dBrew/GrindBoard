@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GrindBoard - Edit Question</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container">
+      <a class="navbar-brand" href="/">GrindBoard</a>
+      <div class="navbar-nav">
+        <a class="nav-link active" href="/questions">Question Bank</a>
+        <a class="nav-link" href="/sessions">Practice Sessions</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container mt-4">
+    <h1>Edit Question</h1>
+
+    <% if (typeof error !== 'undefined') { %>
+    <div class="alert alert-danger"><%= error %></div>
+    <% } %>
+
+    <form method="POST" action="/questions/<%= question._id %>?_method=PUT" class="mt-4">
+      <div class="mb-3">
+        <label class="form-label">Title</label>
+        <input type="text" name="title" class="form-control" value="<%= question.title %>" required>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Link</label>
+        <input type="url" name="link" class="form-control" value="<%= question.link %>" required>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Companies (comma-separated)</label>
+        <input type="text" name="company" class="form-control" value="<%= Array.isArray(question.company) ? question.company.join(', ') : question.company %>" placeholder="e.g. Google, Meta, Amazon">
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Topics (comma-separated)</label>
+        <input type="text" name="topic" class="form-control" value="<%= Array.isArray(question.topic) ? question.topic.join(', ') : question.topic %>" placeholder="e.g. Arrays, DP, Graph">
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Difficulty</label>
+        <select name="difficulty" class="form-select">
+          <option value="Easy" <%= question.difficulty === 'Easy' ? 'selected' : '' %>>Easy</option>
+          <option value="Med" <%= question.difficulty === 'Med' ? 'selected' : '' %>>Med</option>
+          <option value="Hard" <%= question.difficulty === 'Hard' ? 'selected' : '' %>>Hard</option>
+        </select>
+      </div>
+      <button type="submit" class="btn btn-primary">Update Question</button>
+      <a href="/questions" class="btn btn-secondary">Cancel</a>
+    </form>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
