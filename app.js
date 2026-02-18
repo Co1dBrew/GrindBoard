@@ -1,53 +1,43 @@
-require('dotenv').config();
-const express = require('express');
-const mongoose = require('mongoose');
-const methodOverride = require('method-override');
-const path = require('path');
+import "dotenv/config";
+import express from "express";
+import path from "path";
+import { fileURLToPath } from "url";
+import { connectDB } from "./db/connection.js";
+import questionRoutes from "./routes/questionRoutes.js";
+import sessionRoutes from "./routes/sessionRoutes.js";
 
-// Import routes
-const questionRoutes = require('./routes/questionRoutes');
-const sessionRoutes = require('./routes/sessionRoutes');
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Connect to MongoDB
-mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/grindboard')
-  .then(() => console.log('✅ Connected to MongoDB'))
-  .catch(err => console.error('❌ MongoDB connection error:', err));
-
 // Middleware
-app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-app.use(methodOverride('_method'));
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.urlencoded({ extended: true }));
+app.use(express.static(path.join(__dirname, "public")));
 
-// View engine setup
-app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'views'));
+// API routes
+app.use("/api/questions", questionRoutes);
+app.use("/api/sessions", sessionRoutes);
 
-// Routes
-app.use('/questions', questionRoutes);
-app.use('/sessions', sessionRoutes);
-
-// Home route - redirect to questions
-app.get('/', (req, res) => {
-  res.redirect('/questions');
+// Serve index.html for all non-API routes (client-side routing)
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-// Error handling
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).render('error', { message: 'Something went wrong!' });
-});
+// Start server after DB connection
+async function start() {
+  try {
+    const uri = process.env.MONGO_URI || "mongodb://localhost:27017/grindboard";
+    await connectDB(uri);
+    app.listen(PORT, () => {
+      console.log(`GrindBoard running at http://localhost:${PORT}`);
+    });
+  } catch (err) {
+    console.error("Failed to start:", err);
+    process.exit(1);
+  }
+}
 
-// 404 handler
-app.use((req, res) => {
-  res.status(404).render('error', { message: 'Page not found' });
-});
-
-app.listen(PORT, () => {
-  console.log(`🚀 GrindBoard server running on http://localhost:${PORT}`);
-});
-
-module.exports = app;
+start();

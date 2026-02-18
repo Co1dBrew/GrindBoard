@@ -1,86 +1,152 @@
-const express = require('express');
-const router = express.Router();
-const Question = require('../models/Question');
+import { Router } from "express";
+import { ObjectId } from "mongodb";
+import { getDB } from "../db/connection.js";
 
-// GET /questions - Index (List all questions with filter)
-router.get('/', async (req, res) => {
+const router = Router();
+
+// GET /api/questions — list all, with optional filters
+router.get("/", async (req, res) => {
   try {
+    const db = getDB();
     const { company, topic, difficulty } = req.query;
-    let query = {};
-    
-    if (company) query.company = { $in: company.split(',').map(c => c.trim()) };
-    if (topic) query.topic = { $in: topic.split(',').map(t => t.trim()) };
-    if (difficulty) query.difficulty = difficulty;
-    
-    const questions = await Question.find(query).sort({ createdAt: -1 });
-    res.render('questions/index', { questions, query: req.query });
+    const filter = {};
+
+    if (company) {
+      filter.company = { $in: company.split(",").map((c) => c.trim()) };
+    }
+    if (topic) {
+      filter.topic = { $in: topic.split(",").map((t) => t.trim()) };
+    }
+    if (difficulty) {
+      filter.difficulty = difficulty;
+    }
+
+    const questions = await db
+      .collection("questions")
+      .find(filter)
+      .sort({ createdAt: -1 })
+      .toArray();
+
+    res.json(questions);
   } catch (err) {
-    res.status(500).render('error', { message: err.message });
+    res.status(500).json({ error: err.message });
   }
 });
 
-// GET /questions/new - New question form
-router.get('/new', (req, res) => {
-  res.render('questions/new', { question: null });
+// GET /api/questions/:id — single question
+router.get("/:id", async (req, res) => {
+  try {
+    const db = getDB();
+    const question = await db
+      .collection("questions")
+      .findOne({ _id: new ObjectId(req.params.id) });
+
+    if (!question) {
+      return res.status(404).json({ error: "Question not found" });
+    }
+    res.json(question);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-// POST /questions - Create new question
-router.post('/', async (req, res) => {
+// POST /api/questions — create
+router.post("/", async (req, res) => {
   try {
+    const db = getDB();
     const { title, link, company, topic, difficulty } = req.body;
-    const question = new Question({
-      title,
-      link,
-      company: company ? company.split(',').map(c => c.trim()) : [],
-      topic: topic ? topic.split(',').map(t => t.trim()) : [],
-      difficulty
-    });
-    await question.save();
-    res.redirect('/questions');
+
+    const doc = {
+      title: title.trim(),
+      link: link.trim(),
+      company: company
+        ? company
+          .split(",")
+          .map((c) => c.trim())
+          .filter(Boolean)
+        : [],
+      topic: topic
+        ? topic
+          .split(",")
+          .map((t) => t.trim())
+          .filter(Boolean)
+        : [],
+      difficulty: difficulty || "Med",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    const result = await db.collection("questions").insertOne(doc);
+    doc._id = result.insertedId;
+    res.status(201).json(doc);
   } catch (err) {
-    res.status(400).render('questions/new', { question: req.body, error: err.message });
+    res.status(400).json({ error: err.message });
   }
 });
 
-// GET /questions/:id/edit - Edit question form
-router.get('/:id/edit', async (req, res) => {
+// PUT /api/questions/:id — update
+router.put("/:id", async (req, res) => {
   try {
-    const question = await Question.findById(req.params.id);
-    if (!question) return res.status(404).render('error', { message: 'Question not found' });
-    res.render('questions/edit', { question });
-  } catch (err) {
-    res.status(500).render('error', { message: err.message });
-  }
-});
-
-// PUT /questions/:id - Update question
-router.put('/:id', async (req, res) => {
-  try {
+    const db = getDB();
     const { title, link, company, topic, difficulty } = req.body;
-    const question = await Question.findByIdAndUpdate(req.params.id, {
-      title,
-      link,
-      company: company ? company.split(',').map(c => c.trim()) : [],
-      topic: topic ? topic.split(',').map(t => t.trim()) : [],
-      difficulty
-    }, { new: true, runValidators: true });
-    
-    if (!question) return res.status(404).render('error', { message: 'Question not found' });
-    res.redirect('/questions');
+
+    const updates = {
+      title: title.trim(),
+      link: link.trim(),
+      company: company
+        ? company
+          .split(",")
+          .map((c) => c.trim())
+          .filter(Boolean)
+        : [],
+      topic: topic
+        ? topic
+          .split(",")
+          .map((t) => t.trim())
+          .filter(Boolean)
+        : [],
+      difficulty: difficulty || "Med",
+      updatedAt: new Date(),
+    };
+
+    const result = await db
+      .collection("questions")
+      .findOneAndUpdate(
+        { _id: new ObjectId(req.params.id) },
+        { $set: updates },
+        { returnDocument: "after" },
+      );
+
+    if (!result) {
+      return res.status(404).json({ error: "Question not found" });
+    }
+    res.json(result);
   } catch (err) {
-    res.status(400).render('questions/edit', { question: { ...req.body, _id: req.params.id }, error: err.message });
+    res.status(400).json({ error: err.message });
   }
 });
 
-// DELETE /questions/:id - Delete question
-router.delete('/:id', async (req, res) => {
+// DELETE /api/questions/:id — delete
+router.delete("/:id", async (req, res) => {
   try {
-    const question = await Question.findByIdAndDelete(req.params.id);
-    if (!question) return res.status(404).render('error', { message: 'Question not found' });
-    res.redirect('/questions');
+    const db = getDB();
+    const result = await db
+      .collection("questions")
+      .deleteOne({ _id: new ObjectId(req.params.id) });
+
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ error: "Question not found" });
+    }
+
+    // also remove related sessions
+    await db
+      .collection("practice_sessions")
+      .deleteMany({ questionId: req.params.id });
+
+    res.json({ message: "Question deleted" });
   } catch (err) {
-    res.status(500).render('error', { message: err.message });
+    res.status(500).json({ error: err.message });
   }
 });
 
-module.exports = router;
+export default router;
