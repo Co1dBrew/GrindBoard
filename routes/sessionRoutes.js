@@ -67,10 +67,23 @@ router.get("/stats", async (req, res) => {
 
         // per-topic breakdown
         const topicMap = {};
+
+        // Optimize: Fetch all relevant questions in one query
+        const qIds = [...new Set(sessions.map((s) => s.questionId))].filter((id) =>
+            ObjectId.isValid(id),
+        );
+        const questions = await db
+            .collection("questions")
+            .find({
+                _id: { $in: qIds.map((id) => new ObjectId(id)) },
+            })
+            .toArray();
+
+        const qMap = {};
+        questions.forEach((q) => (qMap[q._id.toString()] = q));
+
         for (const s of sessions) {
-            const q = await db
-                .collection("questions")
-                .findOne({ _id: new ObjectId(s.questionId) });
+            const q = qMap[s.questionId];
             if (!q) continue;
             for (const t of q.topic || []) {
                 if (!topicMap[t])
