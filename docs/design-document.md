@@ -5,6 +5,7 @@
 GrindBoard is a web application that helps CS students organize and track their technical interview preparation. Students often solve hundreds of LeetCode-style problems but lose track of which topics they're weak in, which companies asked what, and how their speed improves over time.
 
 GrindBoard lets users:
+
 - Build a personal question bank tagged by company, topic, and difficulty
 - Log each practice attempt with time spent, result (solved/unsolved/partial), and notes
 - View summary stats and per-topic breakdowns to identify weak areas
@@ -20,11 +21,13 @@ Unlike bookmarking problems on LeetCode, this tool focuses on **self-assessment 
 Kevin is a senior CS student preparing for technical interviews at FAANG companies. He has a target list of companies and needs to focus his practice on their most frequently asked topics. Kevin solves 3–5 problems per day and wants to track his solve rate and average time by topic so he can prioritize weak areas in the weeks leading up to his interviews.
 
 **Goals:**
+
 - Focus practice on company-specific questions
 - Track improvement in speed and accuracy
 - Identify weak topics before interviews
 
 **Pain points:**
+
 - Loses track of which problems he's already solved
 - Can't easily filter his question bank by company
 - No way to see progress over time on LeetCode alone
@@ -36,11 +39,13 @@ Kevin is a senior CS student preparing for technical interviews at FAANG compani
 Mei is a sophomore who started interview prep early. She wants to build a question bank gradually over months, adding problems as she encounters them in class or study groups. She practices a few times a week and wants to see her long-term progress.
 
 **Goals:**
+
 - Build a question bank over time
 - Track attempts and notes for review sessions
 - See which topics she's improving on
 
 **Pain points:**
+
 - Bookmarks scattered across browsers and spreadsheets
 - Forgets which approach she used on past attempts
 - Hard to see trends in her progress

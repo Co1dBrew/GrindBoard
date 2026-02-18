@@ -1,7 +1,8 @@
-import { renderQuestionList, renderQuestionForm } from "./questions.js";
+import { renderQuestionList, renderQuestionForm, renderEditForm } from "./questions.js";
 import {
     renderSessionList,
     renderNewSessionForm,
+    renderEditSessionForm,
     renderQuestionHistory,
     renderStats,
 } from "./sessions.js";
@@ -27,6 +28,9 @@ function router() {
         renderQuestionList();
     } else if (path === "/questions/new") {
         renderQuestionForm();
+    } else if (path.startsWith("/questions/edit/")) {
+        const qId = path.split("/questions/edit/")[1];
+        renderEditForm(qId);
     } else if (path === "/sessions") {
         renderSessionList();
     } else if (path.startsWith("/sessions/new/")) {
@@ -34,6 +38,9 @@ function router() {
         renderNewSessionForm(qId);
     } else if (path === "/sessions/new") {
         renderNewSessionForm();
+    } else if (path.startsWith("/sessions/edit/")) {
+        const sId = path.split("/sessions/edit/")[1];
+        renderEditSessionForm(sId);
     } else if (path.startsWith("/sessions/question/")) {
         const qId = path.split("/sessions/question/")[1];
         renderQuestionHistory(qId);

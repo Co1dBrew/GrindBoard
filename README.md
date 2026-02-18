@@ -9,7 +9,7 @@
 
 ## Class
 
-CS Web Development — [Northeastern University](https://www.northeastern.edu/)
+CS Web Development — [Northeastern University](https://johnguerra.co/classes/webDevelopment_online_spring_2026/)
 
 ## Project Objective
 
@@ -18,6 +18,12 @@ GrindBoard helps CS students organize and track their technical interview prepar
 ## Screenshot
 
 ![GrindBoard Screenshot](docs/screenshot.png)
+
+## Deployment
+
+The application is deployed on Render: [https://grindboard-khjy.onrender.com](https://grindboard-khjy.onrender.com)
+
+> **Note:** This service uses a free instance type that will spin down with inactivity, which can delay requests by 50 seconds or more.
 
 ## Tech Stack
 
@@ -89,6 +95,10 @@ GrindBoard/
 ├── scripts/seedData.js     # Database seed script
 └── docs/                   # Design document
 ```
+
+## AI Usage
+
+This project utilized the **Claude 4.6 Opus** model to assist in generating the large dataset of repetitive examples used for seeding the database.
 
 ## License
 

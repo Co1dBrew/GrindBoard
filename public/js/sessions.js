@@ -95,11 +95,21 @@ async function loadSessionTable() {
 
             const actionCell = tr.querySelector(".action-cell");
 
-            const editBtn = createElement("button", "btn btn-small btn-secondary", "Edit");
-            editBtn.addEventListener("click", () => renderEditSessionForm(s._id));
+            const editBtn = createElement(
+                "button",
+                "btn btn-small btn-secondary",
+                "Edit",
+            );
+            editBtn.addEventListener("click", () => {
+                window.location.hash = `#/sessions/edit/${s._id}`;
+            });
             actionCell.appendChild(editBtn);
 
-            const delBtn = createElement("button", "btn btn-small btn-danger", "Delete");
+            const delBtn = createElement(
+                "button",
+                "btn btn-small btn-danger",
+                "Delete",
+            );
             delBtn.addEventListener("click", async () => {
                 if (!confirm("Delete this session?")) return;
                 try {
@@ -138,7 +148,7 @@ export async function renderNewSessionForm(preselectedQuestionId) {
         form.id = "session-form";
 
         // build question select options
-        let optionsHtml = `<option value="">-- Select a question --</option>`;
+        let optionsHtml = "<option value=\"\">-- Select a question --</option>";
         questions.forEach((q) => {
             const selected =
                 preselectedQuestionId && q._id === preselectedQuestionId
@@ -275,7 +285,8 @@ export async function renderQuestionHistory(questionId) {
     const wrapper = createElement("div", "sessions-page");
 
     try {
-        const { question, sessions, stats } = await fetchQuestionHistory(questionId);
+        const { question, sessions, stats } =
+            await fetchQuestionHistory(questionId);
 
         const header = createElement("div", "page-header");
         const title = createElement("h1", null, `History: ${question.title}`);
@@ -415,7 +426,11 @@ export async function renderStats() {
             wrapper.appendChild(table);
         } else {
             wrapper.appendChild(
-                createElement("p", "empty-state", "No data yet. Start practicing!"),
+                createElement(
+                    "p",
+                    "empty-state",
+                    "No data yet. Start practicing!",
+                ),
             );
         }
     } catch (err) {

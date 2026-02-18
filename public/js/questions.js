@@ -25,7 +25,9 @@ export async function renderQuestionList() {
     const header = createElement("div", "page-header");
     header.appendChild(createElement("h1", null, "Question Bank"));
     const addBtn = createElement("button", "btn btn-primary", "+ Add Question");
-    addBtn.addEventListener("click", () => renderQuestionForm());
+    addBtn.addEventListener("click", () => {
+        window.location.hash = "#/questions/new";
+    });
     header.appendChild(addBtn);
     wrapper.appendChild(header);
 
@@ -53,7 +55,11 @@ async function loadQuestions(filters = {}) {
 
         if (questions.length === 0) {
             listEl.appendChild(
-                createElement("p", "empty-state", "No questions found. Add one!"),
+                createElement(
+                    "p",
+                    "empty-state",
+                    "No questions found. Add one!",
+                ),
             );
             return;
         }
@@ -133,7 +139,11 @@ function buildQuestionCard(q) {
     titleLink.className = "question-title-link";
     titleRow.appendChild(titleLink);
 
-    const badge = createElement("span", `badge ${difficultyClass(q.difficulty)}`, q.difficulty);
+    const badge = createElement(
+        "span",
+        `badge ${difficultyClass(q.difficulty)}`,
+        q.difficulty,
+    );
     titleRow.appendChild(badge);
     card.appendChild(titleRow);
 
@@ -163,17 +173,31 @@ function buildQuestionCard(q) {
     });
     actions.appendChild(historyBtn);
 
-    const logBtn = createElement("button", "btn btn-small btn-primary", "Log Attempt");
+    const logBtn = createElement(
+        "button",
+        "btn btn-small btn-primary",
+        "Log Attempt",
+    );
     logBtn.addEventListener("click", () => {
         window.location.hash = `#/sessions/new/${q._id}`;
     });
     actions.appendChild(logBtn);
 
-    const editBtn = createElement("button", "btn btn-small btn-secondary", "Edit");
-    editBtn.addEventListener("click", () => renderEditForm(q._id));
+    const editBtn = createElement(
+        "button",
+        "btn btn-small btn-secondary",
+        "Edit",
+    );
+    editBtn.addEventListener("click", () => {
+        window.location.hash = `#/questions/edit/${q._id}`;
+    });
     actions.appendChild(editBtn);
 
-    const delBtn = createElement("button", "btn btn-small btn-danger", "Delete");
+    const delBtn = createElement(
+        "button",
+        "btn btn-small btn-danger",
+        "Delete",
+    );
     delBtn.addEventListener("click", async () => {
         if (!confirm(`Delete "${q.title}"?`)) return;
         try {

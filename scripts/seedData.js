@@ -314,7 +314,10 @@ async function seed() {
                 company: randomPick(COMPANIES, 1, 4),
                 topic: randomPick(TOPICS, 1, 3),
                 difficulty: DIFFICULTIES[randomInt(0, 2)],
-                createdAt: randomDate(new Date("2024-06-01"), new Date("2025-02-01")),
+                createdAt: randomDate(
+                    new Date("2024-06-01"),
+                    new Date("2025-02-01"),
+                ),
                 updatedAt: new Date(),
             });
         }
@@ -352,7 +355,10 @@ async function seed() {
                 timeSpent: randomInt(5, 60),
                 result: results[randomInt(0, 2)],
                 notes: noteTemplates[randomInt(0, noteTemplates.length - 1)],
-                date: randomDate(new Date("2024-06-01"), new Date("2025-02-15")),
+                date: randomDate(
+                    new Date("2024-06-01"),
+                    new Date("2025-02-15"),
+                ),
                 createdAt: new Date(),
                 updatedAt: new Date(),
             });
