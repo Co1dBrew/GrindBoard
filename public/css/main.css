@@ -197,6 +197,49 @@ a:hover {
     color: var(--color-success);
 }
 
+/* Pagination */
+.pagination-nav {
+    display: flex;
+    justify-content: center;
+    margin-top: 2rem;
+}
+
+.pagination {
+    display: flex;
+    list-style: none;
+    gap: 0.5rem;
+    padding: 0;
+    margin: 0;
+    align-items: center;
+}
+
+.page-item .page-link {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    background: var(--color-bg);
+    color: var(--color-text);
+    cursor: pointer;
+    font-size: 0.875rem;
+    transition: all 0.2s;
+}
+
+.page-item.active .page-link {
+    background: var(--color-primary);
+    color: white;
+    border-color: var(--color-primary);
+}
+
+.page-item.disabled .page-link {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: var(--color-bg-alt);
+}
+
+.page-item:not(.disabled):not(.active) .page-link:hover {
+    background: var(--color-border);
+}
+
 .message-error {
     background: rgba(239, 68, 68, 0.15);
     color: var(--color-danger);

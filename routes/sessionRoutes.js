@@ -8,16 +8,24 @@ const router = Router();
 router.get("/", async (req, res) => {
     try {
         const db = getDB();
-        const { questionId } = req.query;
+        const { questionId, page: pageQuery, limit: limitQuery } = req.query;
         const filter = {};
         if (questionId) filter.questionId = questionId;
 
-        // Optimize: Sort and limit could be applied here if pagination was implemented
-        // For now, we fetch all sessions but optimize the join
+        const page = parseInt(pageQuery) || 1;
+        const limit = parseInt(limitQuery) || 50;
+        const skip = (page - 1) * limit;
+
+        const total = await db
+            .collection("practice_sessions")
+            .countDocuments(filter);
+
         const sessions = await db
             .collection("practice_sessions")
             .find(filter)
             .sort({ date: -1 })
+            .skip(skip)
+            .limit(limit)
             .toArray();
 
         // Optimize: Bulk fetch questions for efficient joining
@@ -46,7 +54,12 @@ router.get("/", async (req, res) => {
             question: qMap[s.questionId] || null,
         }));
 
-        res.json(enriched);
+        res.json({
+            data: enriched,
+            total,
+            page,
+            totalPages: Math.ceil(total / limit),
+        });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -56,66 +69,99 @@ router.get("/", async (req, res) => {
 router.get("/stats", async (req, res) => {
     try {
         const db = getDB();
-        const sessions = await db
+
+        // Aggregation to get overall stats and per-topic stats in one go
+        const pipeline = [
+            {
+                $facet: {
+                    overall: [
+                        {
+                            $group: {
+                                _id: null,
+                                totalSessions: { $sum: 1 },
+                                solved: {
+                                    $sum: {
+                                        $cond: [{ $eq: ["$result", "Solved"] }, 1, 0],
+                                    },
+                                },
+                                unsolved: {
+                                    $sum: {
+                                        $cond: [{ $eq: ["$result", "Unsolved"] }, 1, 0],
+                                    },
+                                },
+                                partial: {
+                                    $sum: {
+                                        $cond: [{ $eq: ["$result", "Partial"] }, 1, 0],
+                                    },
+                                },
+                                totalTime: { $sum: "$timeSpent" },
+                            },
+                        },
+                    ],
+                    byTopic: [
+                        {
+                            $addFields: {
+                                questionObjectId: { $toObjectId: "$questionId" },
+                            },
+                        },
+                        {
+                            $lookup: {
+                                from: "questions",
+                                localField: "questionObjectId",
+                                foreignField: "_id",
+                                as: "question",
+                            },
+                        },
+                        { $unwind: "$question" },
+                        { $unwind: "$question.topic" },
+                        {
+                            $group: {
+                                _id: "$question.topic",
+                                total: { $sum: 1 },
+                                solved: {
+                                    $sum: {
+                                        $cond: [{ $eq: ["$result", "Solved"] }, 1, 0],
+                                    },
+                                },
+                                totalTime: { $sum: "$timeSpent" },
+                            },
+                        },
+                    ],
+                },
+            },
+        ];
+
+        const [result] = await db
             .collection("practice_sessions")
-            .find()
+            .aggregate(pipeline)
             .toArray();
 
-        const totalSessions = sessions.length;
-        const solved = sessions.filter((s) => s.result === "Solved").length;
-        const unsolved = sessions.filter((s) => s.result === "Unsolved").length;
-        const partial = sessions.filter((s) => s.result === "Partial").length;
+        const overall = result.overall[0] || {
+            totalSessions: 0,
+            solved: 0,
+            unsolved: 0,
+            partial: 0,
+            totalTime: 0,
+        };
 
         const avgTime =
-            totalSessions > 0
-                ? (
-                    sessions.reduce((sum, s) => sum + s.timeSpent, 0) /
-                      totalSessions
-                ).toFixed(1)
+            overall.totalSessions > 0
+                ? (overall.totalTime / overall.totalSessions).toFixed(1)
                 : 0;
 
-        // per-topic breakdown
-        const topicMap = {};
-
-        // Optimize: Fetch all relevant questions in one query
-        const qIds = [...new Set(sessions.map((s) => s.questionId))].filter((id) =>
-            ObjectId.isValid(id),
-        );
-        const questions = await db
-            .collection("questions")
-            .find({
-                _id: { $in: qIds.map((id) => new ObjectId(id)) },
-            })
-            .toArray();
-
-        const qMap = {};
-        questions.forEach((q) => (qMap[q._id.toString()] = q));
-
-        for (const s of sessions) {
-            const q = qMap[s.questionId];
-            if (!q) continue;
-            for (const t of q.topic || []) {
-                if (!topicMap[t])
-                    topicMap[t] = { total: 0, solved: 0, time: 0 };
-                topicMap[t].total++;
-                if (s.result === "Solved") topicMap[t].solved++;
-                topicMap[t].time += s.timeSpent;
-            }
-        }
-
-        const byTopic = Object.entries(topicMap).map(([topic, data]) => ({
-            topic,
-            total: data.total,
-            solved: data.solved,
-            solveRate: ((data.solved / data.total) * 100).toFixed(0),
-            avgTime: (data.time / data.total).toFixed(1),
+        const byTopic = result.byTopic.map((t) => ({
+            topic: t._id,
+            total: t.total,
+            solved: t.solved,
+            solveRate: ((t.solved / t.total) * 100).toFixed(0),
+            avgTime: (t.totalTime / t.total).toFixed(1),
         }));
 
         res.json({
-            totalSessions,
-            solved,
-            unsolved,
-            partial,
+            totalSessions: overall.totalSessions,
+            solved: overall.solved,
+            unsolved: overall.unsolved,
+            partial: overall.partial,
             avgTime,
             byTopic,
         });

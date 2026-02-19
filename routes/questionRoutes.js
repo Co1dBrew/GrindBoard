@@ -25,13 +25,25 @@ router.get("/", async (req, res) => {
             filter.difficulty = difficulty;
         }
 
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 50;
+        const skip = (page - 1) * limit;
+
+        const total = await db.collection("questions").countDocuments(filter);
         const questions = await db
             .collection("questions")
             .find(filter)
             .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit)
             .toArray();
 
-        res.json(questions);
+        res.json({
+            data: questions,
+            total,
+            page,
+            totalPages: Math.ceil(total / limit),
+        });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }

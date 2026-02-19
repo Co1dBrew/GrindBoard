@@ -10,6 +10,7 @@ import {
     createElement,
     difficultyClass,
     showMessage,
+    renderPagination,
 } from "./utils.js";
 
 const app = () => document.getElementById("app");
@@ -32,25 +33,37 @@ export async function renderQuestionList() {
     wrapper.appendChild(header);
 
     // filter bar
-    const filterBar = buildFilterBar(wrapper);
+    const filterBar = buildFilterBar();
     wrapper.appendChild(filterBar);
 
     // question list container
     const listEl = createElement("div", "question-list");
     listEl.id = "question-list";
     wrapper.appendChild(listEl);
+    
+    // pagination container
+    const paginationEl = createElement("div", "pagination-container");
+    paginationEl.id = "question-pagination";
+    wrapper.appendChild(paginationEl);
+    
     container.appendChild(wrapper);
 
     await loadQuestions();
 }
 
-async function loadQuestions(filters = {}) {
+async function loadQuestions(filters = {}, page = 1) {
     const listEl = document.getElementById("question-list");
+    const paginationEl = document.getElementById("question-pagination");
+    
     clearElement(listEl);
+    clearElement(paginationEl);
+    
     listEl.appendChild(createElement("p", "loading", "Loading..."));
 
     try {
-        const questions = await fetchQuestions(filters);
+        const response = await fetchQuestions(filters, page, 50);
+        const { data: questions, totalPages } = response;
+        
         clearElement(listEl);
 
         if (questions.length === 0) {
@@ -67,13 +80,19 @@ async function loadQuestions(filters = {}) {
         questions.forEach((q) => {
             listEl.appendChild(buildQuestionCard(q));
         });
+        
+        // Render pagination
+        renderPagination(paginationEl, page, totalPages, (newPage) => {
+            loadQuestions(filters, newPage);
+        });
+        
     } catch (err) {
         clearElement(listEl);
         listEl.appendChild(createElement("p", "error", err.message));
     }
 }
 
-function buildFilterBar(wrapper) {
+function buildFilterBar() {
     const bar = createElement("div", "filter-bar");
 
     const diffSelect = document.createElement("select");
@@ -111,7 +130,7 @@ function buildFilterBar(wrapper) {
         if (diff) filters.difficulty = diff;
         if (topic) filters.topic = topic;
         if (company) filters.company = company;
-        loadQuestions(filters);
+        loadQuestions(filters, 1); // Reset to page 1 on filter
     });
     bar.appendChild(filterBtn);
 
@@ -120,7 +139,7 @@ function buildFilterBar(wrapper) {
         document.getElementById("filter-difficulty").value = "";
         document.getElementById("filter-topic").value = "";
         document.getElementById("filter-company").value = "";
-        loadQuestions();
+        loadQuestions({}, 1); // Reset to page 1
     });
     bar.appendChild(clearBtn);
 

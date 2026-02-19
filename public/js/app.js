@@ -48,7 +48,7 @@ function router() {
         renderStats();
     } else {
         const app = document.getElementById("app");
-        app.innerHTML = `<div class="form-page"><h1>404</h1><p>Page not found.</p></div>`;
+        app.innerHTML = "<div class=\"form-page\"><h1>404</h1><p>Page not found.</p></div>";
     }
 }
 

@@ -15,6 +15,7 @@ import {
     resultClass,
     difficultyClass,
     showMessage,
+    renderPagination,
 } from "./utils.js";
 
 const app = () => document.getElementById("app");
@@ -38,18 +39,28 @@ export async function renderSessionList() {
     const tableWrap = createElement("div", "table-wrapper");
     tableWrap.id = "session-table-wrap";
     wrapper.appendChild(tableWrap);
+
+    const paginationEl = createElement("div", "pagination-container");
+    paginationEl.id = "session-pagination";
+    wrapper.appendChild(paginationEl);
+
     container.appendChild(wrapper);
 
     await loadSessionTable();
 }
 
-async function loadSessionTable() {
+async function loadSessionTable(page = 1) {
     const tableWrap = document.getElementById("session-table-wrap");
+    const paginationEl = document.getElementById("session-pagination");
+
     clearElement(tableWrap);
+    clearElement(paginationEl);
     tableWrap.appendChild(createElement("p", "loading", "Loading..."));
 
     try {
-        const sessions = await fetchSessions();
+        const response = await fetchSessions(null, page, 50);
+        const { data: sessions, totalPages } = response;
+        
         clearElement(tableWrap);
 
         if (sessions.length === 0) {
@@ -76,9 +87,7 @@ async function loadSessionTable() {
 
         const tbody = document.createElement("tbody");
 
-        // Limit to 50 most recent sessions for initial load to prevent UI lag
-        const recentSessions = sessions.slice(0, 50);
-        recentSessions.forEach((s) => {
+        sessions.forEach((s) => {
             const tr = document.createElement("tr");
             const qTitle = s.question ? s.question.title : "Unknown";
             const qDiff = s.question ? s.question.difficulty : "";
@@ -117,7 +126,7 @@ async function loadSessionTable() {
                 try {
                     await deleteSession(s._id);
                     showMessage(app(), "Session deleted", "success");
-                    loadSessionTable();
+                    loadSessionTable(page);
                 } catch (err) {
                     showMessage(app(), err.message, "error");
                 }
@@ -130,13 +139,11 @@ async function loadSessionTable() {
         table.appendChild(tbody);
         tableWrap.appendChild(table);
 
-        if (sessions.length > 50) {
-            const moreMsg = createElement("p", "info-text", `Showing 50 of ${sessions.length} sessions.`);
-            moreMsg.style.textAlign = "center";
-            moreMsg.style.marginTop = "1rem";
-            moreMsg.style.color = "var(--color-text-muted)";
-            tableWrap.appendChild(moreMsg);
-        }
+        // Render pagination
+        renderPagination(paginationEl, page, totalPages, (newPage) => {
+            loadSessionTable(newPage);
+        });
+
     } catch (err) {
         clearElement(tableWrap);
         tableWrap.appendChild(createElement("p", "error", err.message));
@@ -152,7 +159,8 @@ export async function renderNewSessionForm(preselectedQuestionId) {
     wrapper.appendChild(createElement("h1", null, "Log Practice Attempt"));
 
     try {
-        const questions = await fetchQuestions();
+        const response = await fetchQuestions({}, 1, 10000); // Fetch all for dropdown
+        const questions = response.data;
 
         const form = document.createElement("form");
         form.id = "session-form";
@@ -407,6 +415,7 @@ export async function renderStats() {
         if (stats.byTopic && stats.byTopic.length > 0) {
             wrapper.appendChild(createElement("h2", null, "By Topic"));
 
+            const tableWrapper = createElement("div", "table-wrapper");
             const table = document.createElement("table");
             table.className = "session-table";
             table.innerHTML = `
@@ -421,19 +430,39 @@ export async function renderStats() {
         </thead>
       `;
             const tbody = document.createElement("tbody");
-            stats.byTopic.forEach((t) => {
-                const tr = document.createElement("tr");
-                tr.innerHTML = `
-          <td><strong>${t.topic}</strong></td>
-          <td>${t.total}</td>
-          <td>${t.solved}</td>
-          <td>${t.solveRate}%</td>
-          <td>${t.avgTime}</td>
-        `;
-                tbody.appendChild(tr);
-            });
             table.appendChild(tbody);
-            wrapper.appendChild(table);
+            tableWrapper.appendChild(table);
+            wrapper.appendChild(tableWrapper);
+
+            // Client-side pagination for topics
+            const paginationEl = createElement("div", "pagination-container");
+            wrapper.appendChild(paginationEl);
+
+            const renderPage = (page) => {
+                clearElement(tbody);
+                const limit = 50;
+                const start = (page - 1) * limit;
+                const end = start + limit;
+                const pageData = stats.byTopic.slice(start, end);
+                const totalPages = Math.ceil(stats.byTopic.length / limit);
+
+                pageData.forEach((t) => {
+                    const tr = document.createElement("tr");
+                    tr.innerHTML = `
+            <td><strong>${t.topic}</strong></td>
+            <td>${t.total}</td>
+            <td>${t.solved}</td>
+            <td>${t.solveRate}%</td>
+            <td>${t.avgTime}</td>
+          `;
+                    tbody.appendChild(tr);
+                });
+
+                clearElement(paginationEl);
+                renderPagination(paginationEl, page, totalPages, renderPage);
+            };
+
+            renderPage(1);
         } else {
             wrapper.appendChild(
                 createElement(

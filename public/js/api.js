@@ -16,11 +16,13 @@ async function request(endpoint, options = {}) {
 }
 
 // Questions API
-export function fetchQuestions(filters = {}) {
+export function fetchQuestions(filters = {}, page = 1, limit = 50) {
     const params = new URLSearchParams();
     if (filters.company) params.set("company", filters.company);
     if (filters.topic) params.set("topic", filters.topic);
     if (filters.difficulty) params.set("difficulty", filters.difficulty);
+    params.set("page", page);
+    params.set("limit", limit);
     const qs = params.toString();
     return request(`/questions${qs ? "?" + qs : ""}`);
 }
@@ -48,9 +50,12 @@ export function deleteQuestion(id) {
 }
 
 // Sessions API
-export function fetchSessions(questionId) {
-    const qs = questionId ? `?questionId=${questionId}` : "";
-    return request(`/sessions${qs}`);
+export function fetchSessions(questionId, page = 1, limit = 50) {
+    const params = new URLSearchParams();
+    if (questionId) params.set("questionId", questionId);
+    params.set("page", page);
+    params.set("limit", limit);
+    return request(`/sessions?${params.toString()}`);
 }
 
 export function fetchSession(id) {
