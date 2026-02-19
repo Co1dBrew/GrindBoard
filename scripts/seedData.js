@@ -299,10 +299,17 @@ async function seed() {
         await db.collection("practice_sessions").deleteMany({});
         console.log("Cleared existing data.");
 
-        // generate 200 questions
+        // generate 1100 questions
         const questions = [];
-        for (let i = 0; i < QUESTION_NAMES.length; i++) {
-            const name = QUESTION_NAMES[i];
+        const totalQuestions = 1100;
+        for (let i = 0; i < totalQuestions; i++) {
+            let name;
+            if (i < QUESTION_NAMES.length) {
+                name = QUESTION_NAMES[i];
+            } else {
+                name = `Mock Question ${i + 1}`;
+            }
+
             const slug = name
                 .toLowerCase()
                 .replace(/[^a-z0-9\s]/g, "")
