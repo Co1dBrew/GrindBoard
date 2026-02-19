@@ -12,14 +12,23 @@ router.get("/", async (req, res) => {
         const filter = {};
         if (questionId) filter.questionId = questionId;
 
+        // Optimize: Sort and limit could be applied here if pagination was implemented
+        // For now, we fetch all sessions but optimize the join
         const sessions = await db
             .collection("practice_sessions")
             .find(filter)
             .sort({ date: -1 })
             .toArray();
 
-        // attach question titles
-        const qIds = [...new Set(sessions.map((s) => s.questionId))];
+        // Optimize: Bulk fetch questions for efficient joining
+        const qIds = [
+            ...new Set(
+                sessions
+                    .map((s) => s.questionId)
+                    .filter((id) => ObjectId.isValid(id)),
+            ),
+        ];
+
         const questions = await db
             .collection("questions")
             .find({

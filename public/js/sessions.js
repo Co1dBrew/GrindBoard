@@ -76,7 +76,9 @@ async function loadSessionTable() {
 
         const tbody = document.createElement("tbody");
 
-        sessions.forEach((s) => {
+        // Limit to 50 most recent sessions for initial load to prevent UI lag
+        const recentSessions = sessions.slice(0, 50);
+        recentSessions.forEach((s) => {
             const tr = document.createElement("tr");
             const qTitle = s.question ? s.question.title : "Unknown";
             const qDiff = s.question ? s.question.difficulty : "";
@@ -127,6 +129,14 @@ async function loadSessionTable() {
 
         table.appendChild(tbody);
         tableWrap.appendChild(table);
+
+        if (sessions.length > 50) {
+            const moreMsg = createElement("p", "info-text", `Showing 50 of ${sessions.length} sessions.`);
+            moreMsg.style.textAlign = "center";
+            moreMsg.style.marginTop = "1rem";
+            moreMsg.style.color = "var(--color-text-muted)";
+            tableWrap.appendChild(moreMsg);
+        }
     } catch (err) {
         clearElement(tableWrap);
         tableWrap.appendChild(createElement("p", "error", err.message));

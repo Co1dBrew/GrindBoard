@@ -328,7 +328,8 @@ async function seed() {
         const qIds = Object.values(insertedQuestions.insertedIds);
         console.log(`Inserted ${qIds.length} questions.`);
 
-        // generate 100 practice sessions
+        // generate 1100 practice sessions (for rubric > 1000 records)
+        console.log("Generating 1100 practice sessions...");
         const sessions = [];
         const results = ["Solved", "Unsolved", "Partial"];
 
@@ -348,7 +349,7 @@ async function seed() {
             "",
         ];
 
-        for (let i = 0; i < 100; i++) {
+        for (let i = 0; i < 1100; i++) {
             const qId = qIds[randomInt(0, qIds.length - 1)];
             sessions.push({
                 questionId: qId.toString(),
