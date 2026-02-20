@@ -15,6 +15,10 @@ CS Web Development — [Northeastern University](https://johnguerra.co/classes/w
 
 GrindBoard helps CS students organize and track their technical interview preparation. Students can build a personal question bank tagged by company, topic, and difficulty, then log each practice attempt with time spent, result, and notes. The app surfaces weak areas and tracks improvement across attempts.
 
+## Webpage Thumbnail
+
+![GrindBoard Webpage Thumbnail](https://github.com/Co1dBrew/GrindBoard/blob/main/docs/thumbnail.png?raw=true)
+
 ## Screenshot
 
 ![GrindBoard Screenshot](docs/screenshot.png)
